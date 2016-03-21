@@ -19,8 +19,8 @@ unlist(lapply(dt.all, class))
 ## summarise column class
 class <- unlist(lapply(dt.all, class))
 table((class)[!names(class) %in% c("ID", "target")])
-# integer integer64   numeric 
-# 238        16       116 
+# integer numeric 
+# 238     132 
 
 ## check unique values
 ColUnique(dt.all)
@@ -28,13 +28,13 @@ ColUnique(dt.all)
 # 4 23420     5     8     4    10    13   131     3    12     3     4    18     8     8     3    23    38    91 
 
 # check tabular summary of all factor columns
-lapply(dt.all[, cols.factor, with = F], table)
+lapply(dt.all, table)
 
 #######################################################################################
-## 2.0 save ###########################################################################
+## save ###############################################################################
 #######################################################################################
 dt.explored <- dt.all
-save(dt.explored, cols.factor, cols.integer, cols.numeric, file = "../data/BNP_Paribas_Cardif_Claims_Management/RData/dt_explored.RData")
+save(dt.explored, file = "../data/Santander_Customer_Satisfaction/RData/dt_explored.RData")
 
 
 

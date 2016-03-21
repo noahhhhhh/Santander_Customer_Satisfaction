@@ -5,12 +5,8 @@ require(bit64)
 #######################################################################################
 ## 1.0 read ###########################################################################
 #######################################################################################
-dt.train.raw <- fread("../data/Santander_Customer_Satisfaction/train.csv")
-dt.test.raw <- fread("../data/Santander_Customer_Satisfaction/test.csv")
-dt.test.raw[, 204 := as.integer64(dt.test.raw[[204]])]
-dt.test.raw[, 206 := as.integer64(dt.test.raw[[206]])]
-dt.test.raw[, 216 := as.integer64(dt.test.raw[[216]])]
-dt.test.raw[, 218 := as.integer64(dt.test.raw[[218]])]
+dt.train.raw <- fread("../data/Santander_Customer_Satisfaction/train.csv", integer64 = "numeric")
+dt.test.raw <- fread("../data/Santander_Customer_Satisfaction/test.csv", integer64 = "numeric")
 dim(dt.train.raw); dim(dt.test.raw)
 # [1] 76020   371
 # [1] 75818   370
@@ -48,6 +44,6 @@ dim(dt.test.raw)
 # [1] 75818   371
 
 #######################################################################################
-## 3.0 save ###########################################################################
+## save ###############################################################################
 #######################################################################################
 save(dt.all, file = "../data/Santander_Customer_Satisfaction/RData/dt_all.RData")

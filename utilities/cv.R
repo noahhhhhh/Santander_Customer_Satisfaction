@@ -1,18 +1,18 @@
 myTrainValidTest <- function(dt){
     cat("prepare train, valid, and test data set...\n")
     set.seed(888)
-    ind.train <- createDataPartition(dt[target >= 0]$target, p = .9, list = F) # remember to change it to .66
-    dt.train <- dt[target >= 0][ind.train]
-    dt.valid <- dt[target >= 0][-ind.train]
-    dt.test <- dt[target == -1]
+    ind.train <- createDataPartition(dt[TARGET >= 0]$TARGET, p = .9, list = F) # remember to change it to .66
+    dt.train <- dt[TARGET >= 0][ind.train]
+    dt.valid <- dt[TARGET >= 0][-ind.train]
+    dt.test <- dt[TARGET == -1]
     dim(dt.train); dim(dt.valid); dim(dt.test)
     
-    table(dt.train$target)
-    table(dt.valid$target)
+    table(dt.train$TARGET)
+    table(dt.valid$TARGET)
     
-    dmx.train <- xgb.DMatrix(data = data.matrix(dt.train[, !c("ID", "target"), with = F]), label = dt.train$target)
-    dmx.valid <- xgb.DMatrix(data = data.matrix(dt.valid[, !c("ID", "target"), with = F]), label = dt.valid$target)
-    x.test <- data.matrix(dt.test[, !c("ID", "target"), with = F])
+    dmx.train <- xgb.DMatrix(data = data.matrix(dt.train[, !c("ID", "TARGET"), with = F]), label = dt.train$TARGET)
+    dmx.valid <- xgb.DMatrix(data = data.matrix(dt.valid[, !c("ID", "TARGET"), with = F]), label = dt.valid$TARGET)
+    x.test <- data.matrix(dt.test[, !c("ID", "TARGET"), with = F])
     return(list(dt.train, dt.valid, dt.test
                 , dmx.train, dmx.valid, x.test))
 }
@@ -31,8 +31,8 @@ myCV_xgb <- function(dt.train, cols.features, dt.valid, k = 10, params){
     m <- 1 # round
     
     if(k == 0){
-        dval <- xgb.DMatrix(data = data.matrix(dt.valid[, cols.features, with = F]), label = dt.valid$target)
-        dtrain <- xgb.DMatrix(data = data.matrix(dt.train[, cols.features, with = F]), label = dt.train$target)
+        dval <- xgb.DMatrix(data = data.matrix(dt.valid[, cols.features, with = F]), label = dt.valid$TARGET)
+        dtrain <- xgb.DMatrix(data = data.matrix(dt.train[, cols.features, with = F]), label = dt.train$TARGET)
         watchlist <- list(val = dval, train = dtrain)
         
         set.seed(888)
@@ -45,7 +45,7 @@ myCV_xgb <- function(dt.train, cols.features, dt.valid, k = 10, params){
         )
         
         pred.dval <- predict(clf, dval)
-        result.dval <- logLoss(getinfo(dval, "label"), pred.dval)
+        result.dval <- auc(getinfo(dval, "label"), pred.dval)
         vec.result.dval <- result.dval
         
         df.result[m, ] <- c(m
@@ -66,16 +66,16 @@ myCV_xgb <- function(dt.train, cols.features, dt.valid, k = 10, params){
     } else {
         ## folds
         cat("folds ...\n")
-        folds <- createFolds(dt.train$target, k = k, list = F)
+        set.seed(888)
+        folds <- createFolds(dt.train$TARGET, k = k, list = F)
         cat("cv ...\n")
-        # vec.result.dval <- rep(0, dim(dt.train[f])[1])
-        # vec.result.valid <- rep(0, dim(dt.valid)[1])
+        vec.result.dval <- rep(0, k)
+        vec.result.valid <- rep(0, k)
         for(i in 1:k){
             f <- folds == i
-            dval <- xgb.DMatrix(data = data.matrix(dt.train[f, cols.features, with = F]), label = dt.train[f]$target)
-            dtrain <- xgb.DMatrix(data = data.matrix(dt.train[!f, cols.features, with = F]), label = dt.train[!f]$target)
+            dval <- xgb.DMatrix(data = data.matrix(dt.train[f, cols.features, with = F]), label = dt.train[f]$TARGET)
+            dtrain <- xgb.DMatrix(data = data.matrix(dt.train[!f, cols.features, with = F]), label = dt.train[!f]$TARGET)
             watchlist <- list(val = dval, train = dtrain)
-            
             set.seed(888)
             print(paste("cv:", i, "-------"))
             clf <- xgb.train(params = params
@@ -87,12 +87,12 @@ myCV_xgb <- function(dt.train, cols.features, dt.valid, k = 10, params){
             )
             
             pred.dval <- predict(clf, dval)
-            result.dval <- logLoss(getinfo(dval, "label"), pred.dval)
+            result.dval <- auc(getinfo(dval, "label"), pred.dval)
             vec.result.dval[i] <- result.dval
             
-            dmx.valid <- xgb.DMatrix(data = data.matrix(dt.valid[, cols.features, with = F]), label = dt.valid$target)
+            dmx.valid <- xgb.DMatrix(data = data.matrix(dt.valid[, cols.features, with = F]), label = dt.valid$TARGET)
             pred.valid <- predict(clf, dmx.valid)
-            result.valid <- logLoss(getinfo(dmx.valid, "label"), pred.valid)
+            result.valid <- auc(getinfo(dmx.valid, "label"), pred.valid)
             vec.result.valid[i] <- result.valid
             
             df.result[(m - 1) * k + i, ] <- c(m
