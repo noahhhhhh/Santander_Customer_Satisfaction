@@ -26,7 +26,7 @@ table(dt.train$TARGET)
 table(dt.valid$TARGET)
 dmx.train <- xgb.DMatrix(data = data.matrix(dt.train[, !c("ID", "TARGET"), with = F]), label = dt.train$TARGET)
 dmx.valid <- xgb.DMatrix(data = data.matrix(dt.valid[, !c("ID", "TARGET"), with = F]), label = dt.valid$TARGET)
-x.test <- data.matrix(dt.test[, !c("ID", "TARGET", cols.int64), with = F])
+x.test <- data.matrix(dt.test[, !c("ID", "TARGET"), with = F])
 
 #######################################################################################
 ## 2.0 cv #############################################################################

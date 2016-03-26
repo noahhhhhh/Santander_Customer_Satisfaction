@@ -16,7 +16,7 @@ load("../data/Santander_Customer_Satisfaction/RData/dt_cleansed.RData")
 #######################################################################################
 cat("prepare train, valid, and test data set...\n")
 set.seed(888)
-ind.train <- createDataPartition(dt.cleansed[TARGET >= 0]$TARGET, p = .9, list = F) # remember to change it to .66
+ind.train <- createDataPartition(dt.cleansed[TARGET >= 0]$TARGET, p = .8, list = F) # remember to change it to .66
 dt.train <- dt.cleansed[TARGET >= 0][ind.train]
 dt.valid <- dt.cleansed[TARGET >= 0][-ind.train]
 dt.test <- dt.cleansed[TARGET == -1]
@@ -45,14 +45,56 @@ table(dt.valid$TARGET)
 # dim(dt.train)
 # table(dt.train$TARGET)
 
-## UNDER SAMPLE
+# UNDER SAMPLE ----- UNDER SAMPLE 0.7, kfold 10, dt.valid .2
+# UNDER SAMPLE 0.7, kfold 10, dt.valid .2
+# round   eta mcw md  ss csb mean.dval  max.dval  min.dval    sd.dval mean.valid max.valid min.vaild
+# 1     1 0.025   1  9 0.9 0.5 0.8380746 0.8540579 0.8314056 0.00663848  0.8445303 0.8463393 0.8431303
+# sd.valid
+# 1 0.001091325
+# nrow(dt.train[TARGET == 0])
+# set.seed(888)
+# sp <- sample(nrow(dt.train[TARGET == 0]), nrow(dt.train[TARGET == 0]) * .7)
+# length(sp)
+# dt.train <- rbind(dt.train[TARGET == 0][sp], dt.train[TARGET == 1])
+# table(dt.train$TARGET)
+# 0     1
+# 31624  5363
+
+# OVER SAMPLE 
+# OVER SAMPLE .2 + org, dt.valid .1, kfold = 10
+# round   eta mcw md  ss csb mean.dval max.dval  min.dval    sd.dval mean.valid max.valid min.vaild
+# 1     1 0.025   1  9 0.9 0.5 0.8465469 0.869957 0.8333904 0.01111857  0.8443441 0.8455045 0.8424316
+# sd.valid
+# 1 0.0009773344
+# nrow(dt.train[TARGET == 1])
+# set.seed(888)
+# sp <- sample(nrow(dt.train[TARGET == 1]), nrow(dt.train[TARGET == 1]) * .1, replace = T)
+# length(sp)
+# dt.train <- rbind(dt.train[TARGET == 1][sp], dt.train[TARGET == 1], dt.train[TARGET == 0])
+# table(dt.train$TARGET)
+# 0     1 
+# 25536  3060
+
+# UNDER AND OVER SAMPLE
+# UNDER AND OVER SAMPLE, UNDER .7, OVER .2, k = 10
+# round   eta mcw md  ss csb mean.dval  max.dval  min.dval    sd.dval mean.valid max.valid min.vaild
+# 1     1 0.025   1  9 0.9 0.5  0.852985 0.8745056 0.8325113 0.01284746  0.8441758 0.8462107 0.8395824
+# sd.valid
+# 1 0.002092373
 nrow(dt.train[TARGET == 0])
-sp <- sample(nrow(dt.train[TARGET == 0]), nrow(dt.train[TARGET == 0]) * .7)
+set.seed(888)
+sp <- sample(nrow(dt.train[TARGET == 0]), nrow(dt.train[TARGET == 0]) * .5)
 length(sp)
 dt.train <- rbind(dt.train[TARGET == 0][sp], dt.train[TARGET == 1])
 table(dt.train$TARGET)
-# 0     1 
-# 31624  5363 
+
+nrow(dt.train[TARGET == 1])
+set.seed(888)
+sp <- sample(nrow(dt.train[TARGET == 1]), nrow(dt.train[TARGET == 1]) * .2, replace = T)
+length(sp)
+dt.train <- rbind(dt.train[TARGET == 1][sp], dt.train[TARGET == 1], dt.train[TARGET == 0])
+table(dt.train$TARGET)
+
 #######################################################################################
 ## 2.0 cv #############################################################################
 #######################################################################################
@@ -73,24 +115,3 @@ df.summary <- myCV_xgb(dt.train
                        , params)
 
 df.summary
-# UNDER SAMPLE 0.5, dt.valid .2
-# round   eta mcw md  ss csb mean.dval  max.dval  min.dval     sd.dval mean.valid max.valid min.vaild
-# 1     1 0.025   1  9 0.9 0.5 0.8364912 0.8500371 0.8268205 0.009596537  0.8430839 0.8445712 0.8406413
-# sd.valid
-# 1 0.001746582
-# UNDER SAMPLE 0.3, dt.valid .2
-# round   eta mcw md  ss csb mean.dval  max.dval  min.dval    sd.dval mean.valid max.valid min.vaild
-# 1     1 0.025   1  9 0.9 0.5 0.8366125 0.8548091 0.8101786 0.01768117  0.8422296 0.8436109 0.8399217
-# sd.valid
-# 1 0.001430463
-# UNDER SAMPLE 0.7, dt.valid .2
-# round   eta mcw md  ss csb mean.dval  max.dval  min.dval     sd.dval mean.valid max.valid min.vaild
-# 1     1 0.025   1  9 0.9 0.5 0.8366834 0.8448043 0.8295128 0.005722074  0.8440323 0.8454439 0.8432108
-# sd.valid
-# 1 0.0009144937
-# UNDER SAMPLE 0.7, kfold 10, dt.valid .2
-# round   eta mcw md  ss csb mean.dval  max.dval  min.dval    sd.dval mean.valid max.valid min.vaild
-# 1     1 0.025   1  9 0.9 0.5 0.8380746 0.8540579 0.8314056 0.00663848  0.8445303 0.8463393 0.8431303
-# sd.valid
-# 1 0.001091325
-# UNDER SAMPLE 0.7, kfold 10, dt.valid .1
