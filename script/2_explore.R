@@ -15,7 +15,6 @@ ColNAs(dt.all, method = "mean")
 ## check class
 unlist(lapply(dt.all, class))
 
-
 ## summarise column class
 class <- unlist(lapply(dt.all, class))
 table((class)[!names(class) %in% c("ID", "target")])

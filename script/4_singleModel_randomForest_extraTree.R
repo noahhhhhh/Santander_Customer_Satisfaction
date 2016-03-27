@@ -39,7 +39,7 @@ for(i in 1:k){
     dtrain <- dt.train[!f]
     dval <- dt.train[f]
     md.rf <- ranger(TARGET ~.
-                    , data = dt.train
+                    , data = dtrain
                     , importance = "impurity"
                     , write.forest = T
                     , replace = T
