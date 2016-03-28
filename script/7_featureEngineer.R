@@ -23,10 +23,128 @@ cnt0 <- apply(dt.cleansed[, !c("ID", "TARGET"), with = F], 1, function(x)sum(x =
 cnt1 <- apply(dt.cleansed[, !c("ID", "TARGET"), with = F], 1, function(x)sum(x == 1))
 
 #######################################################################################
+## kmeans #############################################################################
+#######################################################################################
+## scale
+prep <- preProcess(dt.cleansed[, !c("ID", "TARGET"), with = F]
+                                       # , method = c("range")
+                                       , method = c("center", "scale")
+                                       , verbose = T)
+dt.cleansed.scale <- predict(prep, dt.cleansed)
+
+set.seed(888)
+md.keams <- kmeans(dt.cleansed.scale[, !c("ID", "TARGET"), with = F]
+                                    , centers = 3
+                                    , nstart = 20)
+kmeans <- md.keams$cluster
+temp <- data.table(kmeans = kmeans, target = dt.cleansed$TARGET)
+
+ggplot(temp[dt.cleansed$TARGET >= 0, ], aes(x = as.factor(kmeans), fill = as.factor(target))) +
+    geom_histogram(binwidth = 500)
+
+#######################################################################################
+## tnse ###############################################################################
+#######################################################################################
+## scale
+prep <- preProcess(dt.cleansed[, !c("ID", "TARGET"), with = F]
+                   , method = c("center", "scale")
+                   , verbose = T)
+dt.cleaned.scaled <- predict(prep, dt.cleansed)
+## t-sne on all
+require(Rtsne)
+mx.cleaned.scaled <- data.matrix(dt.cleaned.scaled[, !c("ID", "TARGET"), with = F])
+tsne.out <- Rtsne(mx.cleaned.scaled
+                  , check_duplicates = F
+                  , pca = F
+                  , verbose = T
+                  , perplexity = 30
+                  , theta = .5
+                  , dims = 2)
+embedding <- as.data.frame(tsne.out$Y)[dt.cleansed$TARGET >= 0, ]
+embedding$Class <- as.factor(sub("Class_", "", dt.cleansed$TARGET[dt.cleansed$TARGET >= 0]))
+
+p <- ggplot(embedding, aes(x=V1, y=V2, color=Class)) +
+    geom_point(size=1.25) +
+    guides(colour = guide_legend(override.aes = list(size=6))) +
+    xlab("") + ylab("") +
+    ggtitle("t-SNE 2D Embedding of Betting Data") +
+    theme_light(base_size=20) +
+    theme(strip.background = element_blank(),
+          strip.text.x     = element_blank(),
+          axis.text.x      = element_blank(),
+          axis.text.y      = element_blank(),
+          axis.ticks       = element_blank(),
+          axis.line        = element_blank(),
+          panel.border     = element_blank())
+p
+# seems it does not seperate at all
+mx.tsne.out <- tsne.out$Y
+save(mx.tsne.out, file = "../data/Santander_Customer_Satisfaction/RData/dt_tsne_all.RData")
+
+# try different variable sets
+## t-sne on vars
+require(Rtsne)
+mx.cleaned.scaled <- data.matrix(dt.cleaned.scaled[, names(dt.cleansed)[grep("^var", names(dt.cleaned.scaled))], with = F])
+tsne.out <- Rtsne(mx.cleaned.scaled
+                  , check_duplicates = F
+                  , pca = F
+                  , verbose = T
+                  , perplexity = 30
+                  , theta = .5
+                  , dims = 2)
+embedding <- as.data.frame(tsne.out$Y)[dt.cleansed$TARGET >= 0, ]
+embedding$Class <- as.factor(sub("Class_", "", dt.cleansed$TARGET[dt.cleansed$TARGET >= 0]))
+
+p <- ggplot(embedding, aes(x=V1, y=V2, color=Class)) +
+    geom_point(size=1.25) +
+    guides(colour = guide_legend(override.aes = list(size=6))) +
+    xlab("") + ylab("") +
+    ggtitle("t-SNE 2D Embedding of Betting Data") +
+    theme_light(base_size=20) +
+    theme(strip.background = element_blank(),
+          strip.text.x     = element_blank(),
+          axis.text.x      = element_blank(),
+          axis.text.y      = element_blank(),
+          axis.ticks       = element_blank(),
+          axis.line        = element_blank(),
+          panel.border     = element_blank())
+p
+
+# try different variable sets
+## t-sne on imp
+require(Rtsne)
+mx.cleaned.scaled <- data.matrix(dt.cleaned.scaled[, names(dt.cleansed)[grep("^imp", names(dt.cleaned.scaled))], with = F])
+tsne.out <- Rtsne(mx.cleaned.scaled
+                  , check_duplicates = F
+                  , pca = F
+                  , verbose = T
+                  , perplexity = 30
+                  , theta = .5
+                  , dims = 2)
+embedding <- as.data.frame(tsne.out$Y)[dt.cleansed$TARGET >= 0, ]
+embedding$Class <- as.factor(sub("Class_", "", dt.cleansed$TARGET[dt.cleansed$TARGET >= 0]))
+
+p <- ggplot(embedding, aes(x=V1, y=V2, color=Class)) +
+    geom_point(size=1.25) +
+    guides(colour = guide_legend(override.aes = list(size=6))) +
+    xlab("") + ylab("") +
+    ggtitle("t-SNE 2D Embedding of Betting Data") +
+    theme_light(base_size=20) +
+    theme(strip.background = element_blank(),
+          strip.text.x     = element_blank(),
+          axis.text.x      = element_blank(),
+          axis.text.y      = element_blank(),
+          axis.ticks       = element_blank(),
+          axis.line        = element_blank(),
+          panel.border     = element_blank())
+p
+
+
+#######################################################################################
 ## save ###############################################################################
 #######################################################################################
 dt.cleansed[, cnt0 := cnt0]
 dt.cleansed[, cnt1 := cnt1]
-
+dt.cleansed[, kmeans := kmeans]
 dt.featureEngineered <- dt.cleansed
 save(dt.featureEngineered, file = "../data/Santander_Customer_Satisfaction/RData/dt_featureEngineered.RData")
