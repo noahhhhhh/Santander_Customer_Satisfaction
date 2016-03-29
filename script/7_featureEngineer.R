@@ -43,6 +43,23 @@ ggplot(temp[dt.cleansed$TARGET >= 0, ], aes(x = as.factor(kmeans), fill = as.fac
     geom_histogram(binwidth = 500)
 
 #######################################################################################
+## pca ################################################################################
+#######################################################################################
+pca <- prcomp(dt.cleansed[, !c("ID", "TARGET"), with = F]
+              , center = T
+              , scale. = T) 
+
+pca.all <- pca$x
+pca.var <- pca$sdev^2
+pve <- pca.var/sum(pca.var)
+
+plot(pve[1:100] , xlab =" Principal Component ", ylab=" Proportion of
+Variance Explained ", ylim=c(0,1) ,type = 'b')
+
+plot(cumsum(pve[1:100]), xlab=" Principal Component ", ylab ="Cumulative Proportion of
+     Variance Explained ", ylim=c(0,1) ,type = 'b')
+plot(pca.all[, 1][dt.cleansed$TARGET >= 0], pca.all[, 2][dt.cleansed$TARGET >= 0], cols = as.factor(dt.cleansed$TARGET[dt.cleansed$TARGET >= 0]))
+#######################################################################################
 ## tnse ###############################################################################
 #######################################################################################
 ## scale
@@ -139,7 +156,63 @@ p <- ggplot(embedding, aes(x=V1, y=V2, color=Class)) +
           panel.border     = element_blank())
 p
 
+# try different variable sets
+## t-sne on num
+require(Rtsne)
+mx.cleaned.scaled <- data.matrix(dt.cleaned.scaled[, names(dt.cleansed)[grep("^num", names(dt.cleaned.scaled))], with = F])
+tsne.out <- Rtsne(mx.cleaned.scaled
+                  , check_duplicates = F
+                  , pca = F
+                  , verbose = T
+                  , perplexity = 30
+                  , theta = .5
+                  , dims = 2)
+embedding <- as.data.frame(tsne.out$Y)[dt.cleansed$TARGET >= 0, ]
+embedding$Class <- as.factor(sub("Class_", "", dt.cleansed$TARGET[dt.cleansed$TARGET >= 0]))
 
+p <- ggplot(embedding, aes(x=V1, y=V2, color=Class)) +
+    geom_point(size=1.25) +
+    guides(colour = guide_legend(override.aes = list(size=6))) +
+    xlab("") + ylab("") +
+    ggtitle("t-SNE 2D Embedding of Betting Data") +
+    theme_light(base_size=20) +
+    theme(strip.background = element_blank(),
+          strip.text.x     = element_blank(),
+          axis.text.x      = element_blank(),
+          axis.text.y      = element_blank(),
+          axis.ticks       = element_blank(),
+          axis.line        = element_blank(),
+          panel.border     = element_blank())
+p
+
+# try different variable sets
+## t-sne on saldo
+require(Rtsne)
+mx.cleaned.scaled <- data.matrix(dt.cleaned.scaled[, names(dt.cleansed)[grep("^saldo", names(dt.cleaned.scaled))], with = F])
+tsne.out <- Rtsne(mx.cleaned.scaled
+                  , check_duplicates = F
+                  , pca = F
+                  , verbose = T
+                  , perplexity = 30
+                  , theta = .5
+                  , dims = 2)
+embedding <- as.data.frame(tsne.out$Y)[dt.cleansed$TARGET >= 0, ]
+embedding$Class <- as.factor(sub("Class_", "", dt.cleansed$TARGET[dt.cleansed$TARGET >= 0]))
+
+p <- ggplot(embedding, aes(x=V1, y=V2, color=Class)) +
+    geom_point(size=1.25) +
+    guides(colour = guide_legend(override.aes = list(size=6))) +
+    xlab("") + ylab("") +
+    ggtitle("t-SNE 2D Embedding of Betting Data") +
+    theme_light(base_size=20) +
+    theme(strip.background = element_blank(),
+          strip.text.x     = element_blank(),
+          axis.text.x      = element_blank(),
+          axis.text.y      = element_blank(),
+          axis.ticks       = element_blank(),
+          axis.line        = element_blank(),
+          panel.border     = element_blank())
+p
 #######################################################################################
 ## save ###############################################################################
 #######################################################################################
