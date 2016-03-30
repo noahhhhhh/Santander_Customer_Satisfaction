@@ -37,7 +37,7 @@ params <- list(booster = "gbtree"
                , objective = "binary:logistic"
                , eval_metric = "auc"
                , max_depth = 5 # 9
-               , subsample = .68 #.9
+               , subsample = .74 #.681
                # , min_child_weight = 1
                , colsample_bytree = .7 #.5
                , eta = .02 #.025
@@ -79,16 +79,20 @@ auc(dt.valid$TARGET, pred.valid.mean)
 # pred.valid <- predict(md.xgb, dmx.valid)
 # ls.pred.valid[[i]] <- pred.valid
 # auc(dt.valid$TARGET, pred.valid)
-# 0.8447578
-# 0.8449555 with cnt0
-# 0.8458973 with cnt0, tuned(incorrect)
-# 0.8475985 with cnt0, tuned(correct)
-# 0.8466288 with cnt0, cnt1
-# 0.8498562 with cnt0, cnt1 with benchmark tuning
-# 0.8492806 with cnt0 with benchmark tuning
-# 0.8502181 with 10 rounds of mean of xgb, with cnt 0, cnt1 with benchmark tuning
-# 0.8498649 with cnt0, cnt1, kmeans with benchmark tuning
-# 0.8503481 with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
+# 0.8447578 73 train vs valid 
+# 0.8449555 73 train vs valid with cnt0
+# 0.8458973 73 train vs valid with cnt0, tuned(incorrect)
+# 0.8475985 73 train vs valid with cnt0, tuned(correct)
+# 0.8466288 73 train vs valid with cnt0, cnt1
+# 0.8498562 73 train vs valid with cnt0, cnt1 with benchmark tuning
+# 0.8492806 73 train vs valid with cnt0 with benchmark tuning
+# 0.8502181 73 train vs valid with 10 rounds of mean of xgb, with cnt 0, cnt1 with benchmark tuning
+# 0.8498649 73 train vs valid with cnt0, cnt1, kmeans with benchmark tuning
+# 0.8503481 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
+# 0.8481537 82 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
+# 0.8497099 65:35 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
+# 0.8498508 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .78 ss
+#  73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
 
 ## importance
 importance <- xgb.importance(setdiff(names(dt.train), c("ID", "TARGET")), model = md.xgb)
@@ -109,14 +113,19 @@ as.data.frame(importance) # cnt1 top 4, cnt0 top 8, kmeans top 106
 pred.test.mean <- apply(as.data.table(sapply(ls.pred.test, print)), 1, mean)
 # submit <- data.table(ID = dt.test$ID, TARGET = pred.test)
 submit <- data.table(ID = dt.test$ID, TARGET = pred.test.mean)
-write.csv(submit, file = "submission/11_10_xgb_cnt0_cnt1_kmeans_benchmark_tuning.csv", row.names = F)
-# 0.836426
-# 0.836738 with cnt0
-# 0.837194 with cnt0, tuned(incorrect)
-# 0.836437 with cnt0, tuned(corrected)
-# 0.836331 with cnt0 and cnt1, tuned
-# 0.839958 with cnt0, cnt1 with benchmark tuning
-# 0.839282 with cnt0 with benchmark tuning
-# 0.840131 with 10 rounds of mean of xgb, with cnt 0, cnt1 with benchmark tuning
-# 0.840231 with cnt0, cnt1, kmeans with benchmark tuning
-# 0.840358 with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
+write.csv(submit, file = "submission/14_10_xgb_73_train_valid_cnt0_cnt1_kmeans_benchmark_tuning_78_ss.csv", row.names = F)
+# 0.836426 73 train vs valid 
+# 0.836738 73 train vs valid with cnt0
+# 0.837194 73 train vs valid with cnt0, tuned(incorrect)
+# 0.836437 73 train vs valid with cnt0, tuned(corrected)
+# 0.836331 73 train vs valid with cnt0 and cnt1, tuned
+# 0.839958 73 train vs valid with cnt0, cnt1 with benchmark tuning
+# 0.839282 73 train vs valid with cnt0 with benchmark tuning
+# 0.840131 73 train vs valid with 10 rounds of mean of xgb, with cnt 0, cnt1 with benchmark tuning
+# 0.840231 73 train vs valid with cnt0, cnt1, kmeans with benchmark tuning
+# 0.840358 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
+# 0.839938 82 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning 82 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
+# 0.839585 65:35 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
+# 0.840300 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .78 ss
+#  73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
+

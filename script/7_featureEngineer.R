@@ -43,6 +43,43 @@ ggplot(temp[dt.cleansed$TARGET >= 0, ], aes(x = as.factor(kmeans), fill = as.fac
     geom_histogram(binwidth = 500)
 
 #######################################################################################
+## knn ################################################################################
+#######################################################################################
+require(class)
+dt.train <- dt.cleansed[TARGET >= 0]
+dt.test <- dt.cleansed[TARGET == -1]
+## folds
+cat("folds ...\n")
+k = 4
+set.seed(888)
+folds <- createFolds(dt.train$TARGET, k = k, list = F)
+# oof knn
+ls.knn.train <- list()
+ls.knn.test <- list()
+knn.train <- rep(0, nrow(dt.train))
+knn.test <- rep(0, nrow(dt.test))
+
+## number of nn
+nnn <- c(1, 2, 4, 8, 16, 32, 64, 128)
+for(n in 1:length(nnn)){
+    for(i in 1:k){
+        print(paste("n:", nnn[n], "; k:", k, "start:", Sys.time()))
+        f <- folds == i
+        dtrain <- dt.train[!f]
+        dval <- dt.train[f]
+        dtest <- dt.test
+        
+        knn.train[f] <- knn(train = dtrain[, !c("ID", "TARGET"), with = F]
+                            , test = dval[, !c("ID", "TARGET"), with = F]
+                            , cl = as.factor(dtrain$TARGET)
+                            , k = nnn[n]
+                            , prob = T)
+        print(paste("n:", nnn[n], "; k:", k, "end:", Sys.time()))
+    }
+    ls.knn.train[[n]] <- knn.train
+    ls.knn.test[[n]] <- knn.test
+}
+#######################################################################################
 ## pca ################################################################################
 #######################################################################################
 pca <- prcomp(dt.cleansed[, !c("ID", "TARGET"), with = F]
@@ -59,6 +96,7 @@ Variance Explained ", ylim=c(0,1) ,type = 'b')
 plot(cumsum(pve[1:100]), xlab=" Principal Component ", ylab ="Cumulative Proportion of
      Variance Explained ", ylim=c(0,1) ,type = 'b')
 plot(pca.all[, 1][dt.cleansed$TARGET >= 0], pca.all[, 2][dt.cleansed$TARGET >= 0], cols = as.factor(dt.cleansed$TARGET[dt.cleansed$TARGET >= 0]))
+
 #######################################################################################
 ## tnse ###############################################################################
 #######################################################################################
