@@ -92,7 +92,7 @@ auc(dt.valid$TARGET, pred.valid.mean)
 # 0.8481537 82 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
 # 0.8497099 65:35 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
 # 0.8498508 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .78 ss
-#  73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
+# 0.849999 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
 
 ## importance
 importance <- xgb.importance(setdiff(names(dt.train), c("ID", "TARGET")), model = md.xgb)
@@ -113,7 +113,7 @@ as.data.frame(importance) # cnt1 top 4, cnt0 top 8, kmeans top 106
 pred.test.mean <- apply(as.data.table(sapply(ls.pred.test, print)), 1, mean)
 # submit <- data.table(ID = dt.test$ID, TARGET = pred.test)
 submit <- data.table(ID = dt.test$ID, TARGET = pred.test.mean)
-write.csv(submit, file = "submission/14_10_xgb_73_train_valid_cnt0_cnt1_kmeans_benchmark_tuning_78_ss.csv", row.names = F)
+write.csv(submit, file = "submission/15_10_xgb_73_train_valid_cnt0_cnt1_kmeans_benchmark_tuning_74_ss.csv", row.names = F)
 # 0.836426 73 train vs valid 
 # 0.836738 73 train vs valid with cnt0
 # 0.837194 73 train vs valid with cnt0, tuned(incorrect)
@@ -127,5 +127,5 @@ write.csv(submit, file = "submission/14_10_xgb_73_train_valid_cnt0_cnt1_kmeans_b
 # 0.839938 82 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning 82 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
 # 0.839585 65:35 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
 # 0.840300 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .78 ss
-#  73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
+# 0.840367 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
 
