@@ -24,13 +24,48 @@ dim(dt.train); dim(dt.valid); dim(dt.test)
 
 table(dt.train$TARGET)
 table(dt.valid$TARGET)
-dmx.train <- xgb.DMatrix(data = data.matrix(dt.train[, !c("ID", "TARGET"), with = F]), label = dt.train$TARGET)
-dmx.valid <- xgb.DMatrix(data = data.matrix(dt.valid[, !c("ID", "TARGET"), with = F]), label = dt.valid$TARGET)
-x.test <- data.matrix(dt.test[, !c("ID", "TARGET"), with = F])
+
+#######################################################################################
+## 2.0 imbalance ######################################################################
+#######################################################################################
+# UNDER AND OVER SAMPLE
+# nrow(dt.train[TARGET == 0])
+# set.seed(888)
+# sp <- sample(nrow(dt.train[TARGET == 0]), nrow(dt.train[TARGET == 0]) * .5)
+# length(sp)
+# dt.train <- rbind(dt.train[TARGET == 0][sp], dt.train[TARGET == 1])
+# table(dt.train$TARGET)
+# 
+# nrow(dt.train[TARGET == 1])
+# set.seed(888)
+# sp <- sample(nrow(dt.train[TARGET == 1]), nrow(dt.train[TARGET == 1]) * .2, replace = T)
+# length(sp)
+# dt.train <- rbind(dt.train[TARGET == 1][sp], dt.train[TARGET == 1], dt.train[TARGET == 0])
+# table(dt.train$TARGET)
+
+# UNDER SAMPLE
+# nrow(dt.train[TARGET == 0])
+# set.seed(888)
+# sp <- sample(nrow(dt.train[TARGET == 0]), nrow(dt.train[TARGET == 0]) * .7)
+# length(sp)
+# dt.train <- rbind(dt.train[TARGET == 0][sp], dt.train[TARGET == 1])
+# table(dt.train$TARGET)
+
+# OVER SAMPLE
+nrow(dt.train[TARGET == 1])
+set.seed(888)
+sp <- sample(nrow(dt.train[TARGET == 1]), nrow(dt.train[TARGET == 1]) * .1, replace = T)
+length(sp)
+dt.train <- rbind(dt.train[TARGET == 1][sp], dt.train[TARGET == 1], dt.train[TARGET == 0])
+table(dt.train$TARGET)
 
 #######################################################################################
 ## 2.0 train ##########################################################################
 #######################################################################################
+dmx.train <- xgb.DMatrix(data = data.matrix(dt.train[, !c("ID", "TARGET"), with = F]), label = dt.train$TARGET)
+dmx.valid <- xgb.DMatrix(data = data.matrix(dt.valid[, !c("ID", "TARGET"), with = F]), label = dt.valid$TARGET)
+x.test <- data.matrix(dt.test[, !c("ID", "TARGET"), with = F])
+
 watchlist <- list(val = dmx.valid, train = dmx.train) # change to dval
 params <- list(booster = "gbtree"
                , nthread = 8
@@ -93,6 +128,9 @@ auc(dt.valid$TARGET, pred.valid.mean)
 # 0.8497099 65:35 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
 # 0.8498508 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .78 ss
 # 0.849999 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
+# 0.8491979 imbalance under and over sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
+# 0.8497037 imbalance under sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
+# 0.8501797 imbalance over sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
 
 ## importance
 importance <- xgb.importance(setdiff(names(dt.train), c("ID", "TARGET")), model = md.xgb)
@@ -113,7 +151,7 @@ as.data.frame(importance) # cnt1 top 4, cnt0 top 8, kmeans top 106
 pred.test.mean <- apply(as.data.table(sapply(ls.pred.test, print)), 1, mean)
 # submit <- data.table(ID = dt.test$ID, TARGET = pred.test)
 submit <- data.table(ID = dt.test$ID, TARGET = pred.test.mean)
-write.csv(submit, file = "submission/15_10_xgb_73_train_valid_cnt0_cnt1_kmeans_benchmark_tuning_74_ss.csv", row.names = F)
+write.csv(submit, file = "submission/18_over_sampling_10_xgb_73_train_valid_cnt0_cnt1_kmeans_benchmark_tuning_74_ss.csv", row.names = F)
 # 0.836426 73 train vs valid 
 # 0.836738 73 train vs valid with cnt0
 # 0.837194 73 train vs valid with cnt0, tuned(incorrect)
@@ -128,4 +166,6 @@ write.csv(submit, file = "submission/15_10_xgb_73_train_valid_cnt0_cnt1_kmeans_b
 # 0.839585 65:35 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning
 # 0.840300 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .78 ss
 # 0.840367 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
-
+# 0.839623 imbalance under and over sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
+# 0.840010 imbalance under sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
+# 0.840197 imbalance over sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss

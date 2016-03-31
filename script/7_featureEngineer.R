@@ -60,7 +60,7 @@ knn.train <- rep(0, nrow(dt.train))
 knn.test <- rep(0, nrow(dt.test))
 
 ## number of nn
-nnn <- c(1, 2, 4, 8, 16, 32, 64, 128)
+nnn <- c(2, 4, 8, 16, 32, 64, 128)
 for(n in 1:length(nnn)){
     for(i in 1:k){
         print(paste("n:", nnn[n], "; k:", k, "start:", Sys.time()))
@@ -69,11 +69,12 @@ for(n in 1:length(nnn)){
         dval <- dt.train[f]
         dtest <- dt.test
         
-        knn.train[f] <- knn(train = dtrain[, !c("ID", "TARGET"), with = F]
+        knn.train[f] <- attributes(knn(train = dtrain[, !c("ID", "TARGET"), with = F]
                             , test = dval[, !c("ID", "TARGET"), with = F]
-                            , cl = as.factor(dtrain$TARGET)
+                            , cl = dtrain$TARGET
                             , k = nnn[n]
-                            , prob = T)
+                            , prob = T
+                            , use.all = F))$prob
         print(paste("n:", nnn[n], "; k:", k, "end:", Sys.time()))
     }
     ls.knn.train[[n]] <- knn.train
