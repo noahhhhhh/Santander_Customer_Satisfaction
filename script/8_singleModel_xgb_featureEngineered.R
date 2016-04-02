@@ -11,6 +11,11 @@ require(combinat)
 source("utilities/preprocess.R")
 source("utilities/cv.R")
 load("../data/Santander_Customer_Satisfaction/RData/dt_featureEngineered.RData")
+dt.featureEngineered[, knn := .4 * knn_2 + .3 * knn_4 + .2 * knn_8 + .1 * knn_16]
+dt.featureEngineered[, knn_2 := NULL]
+dt.featureEngineered[, knn_4 := NULL]
+dt.featureEngineered[, knn_8 := NULL]
+dt.featureEngineered[, knn_16 := NULL]
 #######################################################################################
 ## 1.0 train, valid, test #############################################################
 #######################################################################################
@@ -25,6 +30,7 @@ dim(dt.train); dim(dt.valid); dim(dt.test)
 table(dt.train$TARGET)
 table(dt.valid$TARGET)
 
+dt.train
 #######################################################################################
 ## 2.0 imbalance ######################################################################
 #######################################################################################
@@ -52,12 +58,12 @@ table(dt.valid$TARGET)
 # table(dt.train$TARGET)
 
 # OVER SAMPLE
-nrow(dt.train[TARGET == 1])
-set.seed(888)
-sp <- sample(nrow(dt.train[TARGET == 1]), nrow(dt.train[TARGET == 1]) * .1, replace = T)
-length(sp)
-dt.train <- rbind(dt.train[TARGET == 1][sp], dt.train[TARGET == 1], dt.train[TARGET == 0])
-table(dt.train$TARGET)
+# nrow(dt.train[TARGET == 1])
+# set.seed(888)
+# sp <- sample(nrow(dt.train[TARGET == 1]), nrow(dt.train[TARGET == 1]) * .1, replace = T)
+# length(sp)
+# dt.train <- rbind(dt.train[TARGET == 1][sp], dt.train[TARGET == 1], dt.train[TARGET == 0])
+# table(dt.train$TARGET)
 
 #######################################################################################
 ## 2.0 train ##########################################################################
@@ -131,7 +137,8 @@ auc(dt.valid$TARGET, pred.valid.mean)
 # 0.8491979 imbalance under and over sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
 # 0.8497037 imbalance under sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
 # 0.8501797 imbalance over sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
-
+# 0.8492684 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, knn, with bench tuning and .74 ss
+# 0.8490421 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, knncombined, with bench tuning and .74 ss
 ## importance
 importance <- xgb.importance(setdiff(names(dt.train), c("ID", "TARGET")), model = md.xgb)
 importance[Feature == "cnt0"]
@@ -151,7 +158,7 @@ as.data.frame(importance) # cnt1 top 4, cnt0 top 8, kmeans top 106
 pred.test.mean <- apply(as.data.table(sapply(ls.pred.test, print)), 1, mean)
 # submit <- data.table(ID = dt.test$ID, TARGET = pred.test)
 submit <- data.table(ID = dt.test$ID, TARGET = pred.test.mean)
-write.csv(submit, file = "submission/18_over_sampling_10_xgb_73_train_valid_cnt0_cnt1_kmeans_benchmark_tuning_74_ss.csv", row.names = F)
+write.csv(submit, file = "submission/20_10_xgb_73_train_valid_cnt0_cnt1_kmeans_knncombined_benchmark_tuning_74_ss.csv", row.names = F)
 # 0.836426 73 train vs valid 
 # 0.836738 73 train vs valid with cnt0
 # 0.837194 73 train vs valid with cnt0, tuned(incorrect)
@@ -169,3 +176,5 @@ write.csv(submit, file = "submission/18_over_sampling_10_xgb_73_train_valid_cnt0
 # 0.839623 imbalance under and over sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
 # 0.840010 imbalance under sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
 # 0.840197 imbalance over sampling 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, with bench tuning and .74 ss
+# 0.839139 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, knn, with bench tuning and .74 ss
+# 0.838047 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, knncombined, with bench tuning and .74 ss

@@ -80,6 +80,9 @@ for(n in 1:length(nnn)){
     ls.knn.train[[n]] <- knn.train
     ls.knn.test[[n]] <- knn.test
 }
+
+ls.knn.test[[4]] <- knn.train
+save(ls.knn.train, file = "../data/Santander_Customer_Satisfaction/RData/knn_train.RData")
 #######################################################################################
 ## pca ################################################################################
 #######################################################################################
@@ -258,5 +261,9 @@ p
 dt.cleansed[, cnt0 := cnt0]
 dt.cleansed[, cnt1 := cnt1]
 dt.cleansed[, kmeans := kmeans]
+dt.cleansed[, knn_2 := c(ls.knn.train[[1]], rep(-1, nrow(dt.test)))]
+dt.cleansed[, knn_4 := c(ls.knn.train[[2]], rep(-1, nrow(dt.test)))]
+dt.cleansed[, knn_8 := c(ls.knn.train[[3]], rep(-1, nrow(dt.test)))]
+dt.cleansed[, knn_16 := c(ls.knn.test[[4]], rep(-1, nrow(dt.test)))]
 dt.featureEngineered <- dt.cleansed
 save(dt.featureEngineered, file = "../data/Santander_Customer_Satisfaction/RData/dt_featureEngineered.RData")
