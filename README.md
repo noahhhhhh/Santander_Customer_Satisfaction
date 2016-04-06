@@ -1,4 +1,4 @@
-# Santander_Customer_Satisfaction
+# Feature Engineering
 
 
 Create histograms for categorical variables and group/cluster them.
