@@ -65,7 +65,7 @@ table(dt.valid$TARGET)
 # table(dt.train$TARGET)
 
 #######################################################################################
-## 2.0 train ##########################################################################
+## 2.0 train with valid ###############################################################
 #######################################################################################
 dmx.train <- xgb.DMatrix(data = data.matrix(dt.train[, !c("ID", "TARGET"), with = F]), label = dt.train$TARGET)
 dmx.valid <- xgb.DMatrix(data = data.matrix(dt.valid[, !c("ID", "TARGET"), with = F]), label = dt.valid$TARGET)
@@ -142,6 +142,7 @@ auc(dt.valid$TARGET, pred.valid.mean)
 # 0.8503138 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, vars, with bench tuning and .74 ss
 # 0.8514069 73 train vs valid with single xgb with cnt0, cnt1, kmeans, vars with my tuning
 # 0.8509671 73 train vs valid with 10 xgb with cnt0, cnt1, kmeans, vars with my tuning
+# 0.8491672 73 train vs valid with 10 xgb with cnt0, cnt1, kmeans, lr, vars with my tuning
 
 
 ## importance
@@ -156,14 +157,76 @@ importance[Feature == "kmeans"]
 # Feature         Gain        Cover   Frequence
 # 1:  kmeans 0.0001917778 0.0002788239 0.000185271
 as.data.frame(importance) # cnt1 top 4, cnt0 top 8, kmeans top 106
+
+#######################################################################################
+## 3.0 train with oof #################################################################
+#######################################################################################
+cat("prepare train, valid, and test data set...\n")
+set.seed(888)
+dt.train <- dt.featureEngineered[TARGET >= 0]
+dt.test <- dt.featureEngineered[TARGET == -1]
+dim(dt.train); dim(dt.test)
+
+table(dt.train$TARGET)
+
+## folds
+cat("folds ...\n")
+k = 5 # change to 5
+set.seed(888)
+folds <- createFolds(dt.train$TARGET, k = k, list = F)
+## init preds
+vec.xgb.pred.train <- rep(0, nrow(dt.train))
+vec.xgb.pred.test <- rep(0, nrow(dt.test))
+## init x.test
+x.test <- sparse.model.matrix(~., data = dt.test[, !c("ID", "TARGET"), with = F])
+
+watchlist <- list(val = dmx.valid, train = dmx.train) # change to dval
+## params
+params <- list(booster = "gbtree"
+               , nthread = 8
+               , objective = "binary:logistic"
+               , eval_metric = "auc"
+               , max_depth = 5 # 6
+               , subsample = .74 #.74
+               , min_child_weight = 1 # 1
+               , colsample_bytree = .7 #.6
+               , eta = 0.0201 #.022
+)
+## oof train
+for(i in 1:k){
+    f <- folds == i
+    dmx.train <- xgb.DMatrix(data = sparse.model.matrix(TARGET ~., data = dt.train[!f, setdiff(names(dt.train), c("ID")), with = F]), label = dt.train[!f]$TARGET)
+    dmx.valid <- xgb.DMatrix(data = sparse.model.matrix(TARGET ~., data = dt.train[f, setdiff(names(dt.train), c("ID")), with = F]), label = dt.train[f]$TARGET)
+    watchlist <- list(val = dmx.valid, train = dmx.train) # change to dval
+    set.seed(1234 * i)
+    md.xgb <- xgb.train(params = params
+                        , data = dmx.train
+                        , nrounds = 100000
+                        , early.stop.round = 50
+                        , watchlist = watchlist
+                        , print.every.n = 50
+                        , verbose = F
+    )
+    # valid
+    pred.valid <- predict(md.xgb, dmx.valid)
+    vec.xgb.pred.train[f] <- pred.valid
+    print(paste("fold:", i, "valid auc:", auc(dt.train$TARGET[f], pred.valid)))
+    
+    # test
+    pred.test <- predict(md.xgb, x.test)
+    vec.xgb.pred.test <- vec.xgb.pred.test + pred.test / k
+}
+auc(dt.train$TARGET, vec.xgb.pred.train)
+# 0.8399911 oof k = 5 xgb with cnt0, cnt1, kmeans, lr with my benchmark tuning
+# 0.8415156 oof k = 5 xgb with cnt0, cnt1, kmeans, lr, vars with benchmark tuning
 #######################################################################################
 ## submit #############################################################################
 #######################################################################################
 # pred.test <- predict(md.xgb, x.test)
-pred.test.mean <- apply(as.data.table(sapply(ls.pred.test, print)), 1, mean)
+# pred.test.mean <- apply(as.data.table(sapply(ls.pred.test, print)), 1, mean)
 # submit <- data.table(ID = dt.test$ID, TARGET = pred.test)
-submit <- data.table(ID = dt.test$ID, TARGET = pred.test.mean)
-write.csv(submit, file = "submission/23_10_xgb_73_train_valid_cnt0_cnt1_kmeans_vars_my_tuning.csv", row.names = F)
+submit <- data.table(ID = dt.test$ID, TARGET = vec.xgb.pred.test)
+write.csv(submit, file = "submission/27_oof_k_5_cnt0_cnt1_kmeans_lr_vars_benchmark_tuning_correct.csv", row.names = F)
 # 0.836426 73 train vs valid 
 # 0.836738 73 train vs valid with cnt0
 # 0.837194 73 train vs valid with cnt0, tuned(incorrect)
@@ -186,3 +249,7 @@ write.csv(submit, file = "submission/23_10_xgb_73_train_valid_cnt0_cnt1_kmeans_v
 # 0.839522 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, vars, with bench tuning and .74 ss
 # 0.839537 73 train vs valid with single xgb with cnt0, cnt1, kmeans, vars with my tuning
 # 0.839343 73 train vs valid with 10 xgb with cnt0, cnt1, kmeans, vars with my tuning
+# 0.839990 73 train vs valid with 10 xgb with cnt0, cnt1, kmeans, lr, vars with my tuning
+# 0.840027 oof k = 5 xgb with cnt0, cnt1, kmeans, lr with my benchmark tuning
+
+
