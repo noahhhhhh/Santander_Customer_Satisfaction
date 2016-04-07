@@ -76,12 +76,13 @@ params <- list(booster = "gbtree"
                , nthread = 8
                , objective = "binary:logistic"
                , eval_metric = "auc"
-               , max_depth = 6 # 5; 4:0.850155 5:0.8504593 6:0.8507164 7:0.850147l 9:0.8444527 
-               , subsample = .74 #.74; .65:0.85016 .70: 0.8502957; .73:0.8511474 .74:0.8514069 .75:0.8508004 .8: 0.850362
-               , min_child_weight = 1 # 1; 2:0.8428779
-               , colsample_bytree = .6 #.7; .5:0.8494549 .62:0.8504506 .6:0.8514069* .65:0.8504949 .8: 0.8506108
-               , eta = .022 #.02; .021:0.8510815 .022:0.8513952* .023:0.8512173 .025:0.850257
+               , max_depth = 5 # 6
+               , subsample = .74 #.74
+               , min_child_weight = 1 # 1
+               , colsample_bytree = .7 #.6
+               , eta = 0.0201 #.022
                )
+###### rounds of xgb
 round <- 10
 ls.pred.valid <- list()
 ls.pred.test <- list()
@@ -106,6 +107,7 @@ for(i in 1:round){
 }
 pred.valid.mean <- apply(as.data.table(sapply(ls.pred.valid, print)), 1, mean)
 auc(dt.valid$TARGET, pred.valid.mean)
+####### single xgb
 # set.seed(1234)
 # md.xgb <- xgb.train(params = params
 #                     , data = dmx.train
@@ -113,7 +115,7 @@ auc(dt.valid$TARGET, pred.valid.mean)
 #                     , early.stop.round = 50
 #                     , watchlist = watchlist
 #                     , print.every.n = 50
-#                     , verbose = F
+#                     , verbose = T
 # )
 # # valid
 # pred.valid <- predict(md.xgb, dmx.valid)
@@ -140,6 +142,7 @@ auc(dt.valid$TARGET, pred.valid.mean)
 # 0.8503138 73 train vs valid with 10 rounds of mean of xgb, with cnt0, cnt1, kmeans, vars, with bench tuning and .74 ss
 # 0.8514069 73 train vs valid with single xgb with cnt0, cnt1, kmeans, vars with my tuning
 # 0.8509671 73 train vs valid with 10 xgb with cnt0, cnt1, kmeans, vars with my tuning
+
 
 ## importance
 importance <- xgb.importance(setdiff(names(dt.train), c("ID", "TARGET")), model = md.xgb)

@@ -8,6 +8,8 @@ require(Ckmeans.1d.dp)
 require(Metrics)
 require(ggplot2)
 require(combinat)
+require(Matrix)
+require(glmnet)
 source("utilities/preprocess.R")
 source("utilities/cv.R")
 load("../data/Santander_Customer_Satisfaction/RData/dt_cleansed.RData")
@@ -42,6 +44,66 @@ temp <- data.table(kmeans = kmeans, target = dt.cleansed$TARGET)
 ggplot(temp[dt.cleansed$TARGET >= 0, ], aes(x = as.factor(kmeans), fill = as.factor(target))) +
     geom_histogram(binwidth = 500)
 
+#######################################################################################
+## linear #############################################################################
+#######################################################################################
+cat("prepare train, valid, and test data set...\n")
+set.seed(888)
+dt.train <- dt.cleansed.scale[TARGET >= 0]
+dt.test <- dt.cleansed.scale[TARGET == -1]
+dim(dt.train); dim(dt.test)
+
+table(dt.train$TARGET)
+
+## folds
+cat("folds ...\n")
+k = 5 # change to 5
+set.seed(888)
+folds <- createFolds(dt.train$TARGET, k = k, list = F)
+## init preds
+vec.meta.glm.train <- rep(0, nrow(dt.train))
+vec.meta.glm.test <- rep(0, nrow(dt.test))
+## init grids
+grid <- 10^seq(10, -2, length = 100)
+## test
+x.test <- sparse.model.matrix(as.factor(TARGET) ~ ., data = dt.test)
+
+## oof prediction
+for(i in 1:k){
+    f <- folds == i
+    x.train <- sparse.model.matrix(as.factor(TARGET) ~ ., data = dt.train[!f])
+    y.train <- as.factor(dt.train$TARGET[!f])
+    x.valid <- sparse.model.matrix(as.factor(TARGET) ~ ., data = dt.train[f])
+    y.valid <- as.factor(dt.train$TARGET[f])
+    
+    # train
+    md.lasso <- glmnet(x.train, y.train, alpha = .5, lambda = grid, family = "binomial")
+    plot(md.lasso)
+    
+    # cv to choose λ
+    set.seed(888)
+    cv.out <- cv.glmnet(x.train, y.train, alpha = .5, type.measure = "auc", family = "binomial")
+    # plot(cv.out)
+    bestlam <- cv.out$lambda.min
+    # bestlam
+    
+    # valid
+    pred.lasso <- predict(md.lasso , s = bestlam, type = "response", newx = x.valid)
+    vec.meta.glm.test <- vec.meta.glm.test + predict(md.lasso , s = bestlam, type = "response", newx = x.test) / k
+    
+    vec.meta.glm.train[f] <- pred.lasso
+    print(paste("k:", k, "done"))
+}
+auc(dt.train$TARGET, vec.meta.glm.train)
+# 0.7736529 k = 10
+# 0.7728757 k = 5
+
+# save(vec.meta.glm.train, vec.meta.glm.test, file = "../data/Santander_Customer_Satisfaction/RData/glm_train.RData")
+
+# coef
+coef.lasso <- predict(md.lasso, type = "coefficients", s = bestlam)
+coef.lasso
+coef.lasso[coef.lasso != 0]
 #######################################################################################
 ## var based  #########################################################################
 #######################################################################################
@@ -681,6 +743,8 @@ p
 dt.cleansed[, cnt0 := cnt0]
 dt.cleansed[, cnt1 := cnt1]
 dt.cleansed[, kmeans := kmeans]
+load("../data/Santander_Customer_Satisfaction/RData/glm_train.RData")
+dt.cleansed[, lr := c(vec.meta.glm.train, vec.meta.glm.test)]
 ## var1
 dt.cleansed[, new_var1_cnt0 := new_var1_cnt0]
 dt.cleansed[, new_var1_ind_diff := new_var1_ind_diff]
