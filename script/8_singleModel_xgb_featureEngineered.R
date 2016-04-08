@@ -186,11 +186,11 @@ params <- list(booster = "gbtree"
                , nthread = 8
                , objective = "binary:logistic"
                , eval_metric = "auc"
-               , max_depth = 5 # 6
+               , max_depth = 6 # 5
                , subsample = .74 #.74
                , min_child_weight = 1 # 1
-               , colsample_bytree = .7 #.6
-               , eta = 0.0201 #.022
+               , colsample_bytree = .6 #.7
+               , eta = 0.022 #.0201
 )
 ## oof train
 for(i in 1:k){
@@ -219,6 +219,7 @@ for(i in 1:k){
 auc(dt.train$TARGET, vec.xgb.pred.train)
 # 0.8399911 oof k = 5 xgb with cnt0, cnt1, kmeans, lr with my benchmark tuning
 # 0.8415156 oof k = 5 xgb with cnt0, cnt1, kmeans, lr, vars with benchmark tuning
+# 0.8404126 oof k = 5 xgb with cnt0, cnt1, kmeans, lr, vars with my tuning
 #######################################################################################
 ## submit #############################################################################
 #######################################################################################
@@ -226,7 +227,7 @@ auc(dt.train$TARGET, vec.xgb.pred.train)
 # pred.test.mean <- apply(as.data.table(sapply(ls.pred.test, print)), 1, mean)
 # submit <- data.table(ID = dt.test$ID, TARGET = pred.test)
 submit <- data.table(ID = dt.test$ID, TARGET = vec.xgb.pred.test)
-write.csv(submit, file = "submission/27_oof_k_5_cnt0_cnt1_kmeans_lr_vars_benchmark_tuning_correct.csv", row.names = F)
+write.csv(submit, file = "submission/28_oof_k_5_cnt0_cnt1_kmeans_lr_vars_my_tunin.csv", row.names = F)
 # 0.836426 73 train vs valid 
 # 0.836738 73 train vs valid with cnt0
 # 0.837194 73 train vs valid with cnt0, tuned(incorrect)
@@ -251,5 +252,6 @@ write.csv(submit, file = "submission/27_oof_k_5_cnt0_cnt1_kmeans_lr_vars_benchma
 # 0.839343 73 train vs valid with 10 xgb with cnt0, cnt1, kmeans, vars with my tuning
 # 0.839990 73 train vs valid with 10 xgb with cnt0, cnt1, kmeans, lr, vars with my tuning
 # 0.840027 oof k = 5 xgb with cnt0, cnt1, kmeans, lr with my benchmark tuning
-
+# 0.839829 oof k = 5 xgb with cnt0, cnt1, kmeans, lr, vars with my benchmark tuning corrected
+#  oof k = 5 xgb with cnt0, cnt1, kmeans, lr, vars with my tuning
 
