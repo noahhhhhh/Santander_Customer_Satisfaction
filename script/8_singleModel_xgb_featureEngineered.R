@@ -253,5 +253,5 @@ write.csv(submit, file = "submission/28_oof_k_5_cnt0_cnt1_kmeans_lr_vars_my_tuni
 # 0.839990 73 train vs valid with 10 xgb with cnt0, cnt1, kmeans, lr, vars with my tuning
 # 0.840027 oof k = 5 xgb with cnt0, cnt1, kmeans, lr with my benchmark tuning
 # 0.839829 oof k = 5 xgb with cnt0, cnt1, kmeans, lr, vars with my benchmark tuning corrected
-#  oof k = 5 xgb with cnt0, cnt1, kmeans, lr, vars with my tuning
+# 0.839674 oof k = 5 xgb with cnt0, cnt1, kmeans, lr, vars with my tuning
 
