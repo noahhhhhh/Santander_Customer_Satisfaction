@@ -26,3 +26,6 @@ Genetic programming: http://gplearn.readthedocs.org/en/latest/examples.html#exam
 Recursive Feature Elimination: Use all features -> drop the feature that results in biggest CV gain -> repeat till no improvement
 
 Automation: Try to infer type of feature automatically with scripts and create feature engineering pipelines. This scales and can be used even when the features are not anonymized.
+
+# Tuning xgb
+nrounds and eta is the last thing I tune. As your cpu has limitations, I would go for 3-fold CV (but would suggest 5-fold). I usually start with eta=0.05 (or even 0.1), tune optimal subsample/colsample_bytree simultaneously, then go for max_depth. and in the end reduce eta 0.025 or 0.01 and pick nrounds by CV (I have never used eta below 0.01 as it usually has no good cpu ROI :).
