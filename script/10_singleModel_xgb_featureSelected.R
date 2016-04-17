@@ -38,71 +38,77 @@ x.test <- sparse.model.matrix(~., data = dt.test[, !c("ID", "TARGET"), with = F]
 # watchlist <- list(val = dmx.valid, train = dmx.train) # change to dval
 md <- 5
 gamma <- 0
-cbl <- seq(.1, 1, .1)
-ss <- seq(.1, 1, .1)
+cbl <- .2 # .3* | .4 | .5 ; .2
+ss <- .9 # .4
+spw <- 1
 j <- 1
 score <- as.numeric()
-tb <- data.table(gamma = 0, md = 0, ss = 0, cbl = 0, score = 0)
+tb <- data.table(gamma = 0, md = 0, ss = 0, cbl = 0, spw = 0, score = 0)
 
 ## oof cv
-for(g in length(gamma):length(gamma)){
-    for(m in length(md):length(md)){
-        for(s in 1:length(ss)){
-            for (c in 1:length(cbl)){
-                ## params
-                params <- list(booster = "gbtree"
-                               , nthread = 8
-                               , objective = "binary:logistic"
-                               , eval_metric = "auc"
-                               , max_depth = 5 # 5
-                               , subsample = ss[s] #.74
-                               , min_child_weight = 1 # 1
-                               , gamma = gamma[g]
-                               # , colsample_bytree = 1 #.7
-                               # , scale_pos_weight = spws[s]
-                               , colsample_bylevel = cbl[c]
-                               , eta = 0.022 #.0201
-                )
-                
-                ## oof train
-                for(i in 1:k){
-                    f <- folds == i
-                    dmx.train <- xgb.DMatrix(data = sparse.model.matrix(TARGET ~., data = dt.train[!f, setdiff(names(dt.train), c("ID")), with = F]), label = dt.train[!f]$TARGET)
-                    dmx.valid <- xgb.DMatrix(data = sparse.model.matrix(TARGET ~., data = dt.train[f, setdiff(names(dt.train), c("ID")), with = F]), label = dt.train[f]$TARGET)
-                    watchlist <- list(val = dmx.valid, train = dmx.train) # change to dval
-                    set.seed(1234 * i)
-                    md.xgb <- xgb.train(params = params
-                                        , data = dmx.train
-                                        , nrounds = 100000
-                                        , early.stop.round = 50
-                                        , watchlist = watchlist
-                                        , print.every.n = 50
-                                        , verbose = F
+for(sp in 1:length(spw)){
+    for(g in length(gamma):length(gamma)){
+        for(m in length(md):length(md)){
+            for(s in length(ss):length(ss)){
+                for (c in length(cbl):length(cbl)){
+                    ## params
+                    params <- list(booster = "gbtree"
+                                   , nthread = 8
+                                   , objective = "binary:logistic"
+                                   , eval_metric = "auc"
+                                   , max_depth = 5 # 5
+                                   , subsample = ss[s] #.74
+                                   , min_child_weight = 1 # 1
+                                   , gamma = gamma[g]
+                                   # , colsample_bytree = 1 #.7
+                                   # , scale_pos_weight = spws[s]
+                                   , colsample_bylevel = cbl[c]
+                                   , eta = 0.022 #.0201
+                                   , scale_pos_weight = spw[sp]
                     )
-                    # valid
-                    pred.valid <- predict(md.xgb, dmx.valid)
-                    vec.xgb.pred.train[f] <- pred.valid
-                    print(paste("fold:", i, "valid auc:", auc(dt.train$TARGET[f], pred.valid)))
                     
-                    # test
-                    pred.test <- predict(md.xgb, x.test)
-                    vec.xgb.pred.test <- vec.xgb.pred.test + pred.test / k
+                    ## oof train
+                    for(i in 1:k){
+                        f <- folds == i
+                        dmx.train <- xgb.DMatrix(data = sparse.model.matrix(TARGET ~., data = dt.train[!f, setdiff(names(dt.train), c("ID")), with = F]), label = dt.train[!f]$TARGET)
+                        dmx.valid <- xgb.DMatrix(data = sparse.model.matrix(TARGET ~., data = dt.train[f, setdiff(names(dt.train), c("ID")), with = F]), label = dt.train[f]$TARGET)
+                        watchlist <- list(val = dmx.valid, train = dmx.train) # change to dval
+                        set.seed(1234 * i)
+                        md.xgb <- xgb.train(params = params
+                                            , data = dmx.train
+                                            , nrounds = 100000
+                                            , early.stop.round = 50
+                                            , watchlist = watchlist
+                                            , print.every.n = 50
+                                            , verbose = F
+                        )
+                        # valid
+                        pred.valid <- predict(md.xgb, dmx.valid)
+                        vec.xgb.pred.train[f] <- pred.valid
+                        print(paste("fold:", i, "valid auc:", auc(dt.train$TARGET[f], pred.valid)))
+                        
+                        # test
+                        pred.test <- predict(md.xgb, x.test)
+                        vec.xgb.pred.test <- vec.xgb.pred.test + pred.test / k
+                    }
+                    
+                    auc(dt.train$TARGET, vec.xgb.pred.train)
+                    score[j] <- auc(dt.train$TARGET, vec.xgb.pred.train)
+                    print(paste("round:", sp, "auc:", score[j]))
+                    tb <- rbind(tb, data.table(gamma = gamma[g], md = md[m], ss = ss[s], cbl = cbl[c], spw = spw[sp], score = score[j]))
+                    
+                    j <- j + 1
                 }
-                
-                auc(dt.train$TARGET, vec.xgb.pred.train)
-                score[j] <- auc(dt.train$TARGET, vec.xgb.pred.train)
-                
-                tb <- rbind(tb, data.table(gamma = gamma[g], md = md[m], ss = ss[s], cbl = cbl[c], score = score[j]))
-                
-                j <- j + 1
             }
         }
     }
 }
 
+tb <- tb[-1]
+tb
 
 # plot(tb$cbl, tb$score, type = "l")
-tb
+save(tb, file = "../data/Santander_Customer_Satisfaction/RData/dt_tb_cv_ss_cbl.RData")
 # subsample = .74
 # cbl     score
 # 1: 0.1 0.8414968
