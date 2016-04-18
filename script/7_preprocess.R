@@ -38,9 +38,10 @@ dt.new.factor <- predict(dummies, newdata = dt.new)
 #######################################################################################
 ## preprocess #########################################################################
 #######################################################################################
-preProcValues <- preProcess(dt.featureEngineered[, !c(cols.num, "ID", "TARGET"), with = F], method = c("center", "scale"))
-dt.featureEngineered.scale <- predict(preProcValues, dt.featureEngineered[, !c(cols.num, "ID", "TARGET"), with = F])
-dt.featureEngineered.combine <- cbind(ID = dt.featureEngineered$ID, TARGET = dt.featureEngineered$TARGET, dt.featureEngineered.scale, dt.new.factor)
+preProcValues <- preProcess(dt.featureEngineered[, !c("ID", "TARGET"), with = F], method = c("center", "scale"))
+dt.featureEngineered.scale <- predict(preProcValues, dt.featureEngineered[, !c("ID", "TARGET"), with = F])
+# dt.featureEngineered.combine <- cbind(ID = dt.featureEngineered$ID, TARGET = dt.featureEngineered$TARGET, dt.featureEngineered.scale, dt.new.factor)
+dt.featureEngineered.combine <- cbind(ID = dt.featureEngineered$ID, TARGET = dt.featureEngineered$TARGET, dt.featureEngineered.scale)
 
 #######################################################################################
 ## 1.0 remove zero vars ###############################################################
@@ -88,6 +89,8 @@ dim(dt.featureEngineered.combine)
 #######################################################################################
 ## save ###############################################################################
 #######################################################################################
-newnames <- gsub(".", "_", names(dt.featureEngineered.combine))
+newnames <- gsub("\\.", "__", names(dt.featureEngineered.combine))
+# newnames <- names(dt.featureEngineered.combine)
+newnames <- gsub("-", "___", newnames)
 setnames(dt.featureEngineered.combine, names(dt.featureEngineered.combine), newnames)
 save(dt.featureEngineered.combine, file = "../data/Santander_Customer_Satisfaction/RData/dt_featureEngineered_combine.RData")

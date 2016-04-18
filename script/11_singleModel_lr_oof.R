@@ -8,19 +8,21 @@ require(Ckmeans.1d.dp)
 require(Metrics)
 require(ggplot2)
 require(combinat)
+require(glmnet)
 require(h2o)
 source("utilities/preprocess.R")
 source("utilities/cv.R")
-load("../data/Santander_Customer_Satisfaction/RData/dt_featureEngineered.RData")
+# load("../data/Santander_Customer_Satisfaction/RData/dt_featureEngineered.RData")
+load("../data/Santander_Customer_Satisfaction/RData/dt_featureEngineered_combine.RData")
 load("../data/Santander_Customer_Satisfaction/RData/cols_selected.RData")
 #######################################################################################
 ## 1.0 train and test #################################################################
 #######################################################################################
-dt.featureEngineered <- dt.featureEngineered[, !c("lr"), with = F]
+dt.featureEngineered.combine <- dt.featureEngineered.combine[, !c("lr"), with = F]
 cat("prepare train, valid, and test data set...\n")
 set.seed(888)
-dt.train <- dt.featureEngineered[TARGET >= 0]
-dt.test <- dt.featureEngineered[TARGET == -1]
+dt.train <- dt.featureEngineered.combine[TARGET >= 0]
+dt.test <- dt.featureEngineered.combine[TARGET == -1]
 dim(dt.train); dim(dt.test)
 
 table(dt.train$TARGET)

@@ -35,8 +35,8 @@ k = 5 # change to 5
 set.seed(888)
 folds <- createFolds(dt.train$TARGET, k = k, list = F)
 ## init preds
-vec.xgb.pred.train <- rep(0, nrow(dt.train))
-vec.xgb.pred.test <- rep(0, nrow(dt.test))
+vec.xgb.linear.pred.train <- rep(0, nrow(dt.train))
+vec.xgb.linear.pred.test <- rep(0, nrow(dt.test))
 ## init x.test
 x.test <- sparse.model.matrix(~., data = dt.test[, !c("ID", "TARGET"), with = F])
 ## init some params
@@ -49,7 +49,7 @@ spw <- 1
 j <- 1
 score <- numeric()
 
-params <- list(booster = "gbtree"
+params <- list(booster = "gblinear"
                , nthread = 8
                , objective = "binary:logistic"
                , eval_metric = "auc"
@@ -79,33 +79,21 @@ for(i in 1:k){
     )
     # valid
     pred.valid <- predict(md.xgb, dmx.valid)
-    vec.xgb.pred.train[f] <- pred.valid
+    vec.xgb.linear.pred.train[f] <- pred.valid
     print(paste("fold:", i, "valid auc:", auc(dt.train$TARGET[f], pred.valid)))
     score[i] <- auc(dt.train$TARGET[f], pred.valid)
     
     # test
     pred.test <- predict(md.xgb, x.test)
-    vec.xgb.pred.test <- vec.xgb.pred.test + pred.test / k
+    vec.xgb.linear.pred.test <- vec.xgb.linear.pred.test + pred.test / k
 }
 
 mean(score)
 sd(score)
 
-auc(dt.train$TARGET, vec.xgb.pred.train)
-# 0.8415005 oof k = 5 xgb with cnt0, cnt1, kmeans, lr, vars with spw, cpl tuning
-# 0.8410063 oof k = 5 xgb with cnt0, cnt1, kmeans, vars with spw, cpl, without lr
-# 0.8420962 oof k = 5 xgb with dummy
-# 0.842384 oof k = 5 xgb with scale
+auc(dt.train$TARGET, vec.xgb.linear.pred.train)
+# 0.7927233 oof
 #######################################################################################
 ## submit #############################################################################
 #######################################################################################
-# pred.test <- predict(md.xgb, x.test)
-# pred.test.mean <- apply(as.data.table(sapply(ls.pred.test, print)), 1, mean)
-# submit <- data.table(ID = dt.test$ID, TARGET = pred.test)
-submit <- data.table(ID = dt.test$ID, TARGET = vec.xgb.pred.test)
-write.csv(submit, file = "submission/32_oof_k_5_xgb_scale.csv", row.names = F)
-# 0.839825 oof k = 5 xgb with cnt0, cnt1, kmeans, lr, vars with spw, cpl tuning
-# 0.839007 oof k = 5 xgb with cnt0, cnt1, kmeans, vars with spw, cpl, without lr
-# 0.838.. oof k = 5 xgb with dummy
-# 0.838653 oof k = 5 xgb with scale
-save(vec.xgb.pred.train, vec.xgb.pred.test, file = "../data/Santander_Customer_Satisfaction/RData/dt_meta_1_xgb.RData")
+save(vec.xgb.linear.pred.train, vec.xgb.linear.pred.test, file = "../data/Santander_Customer_Satisfaction/RData/dt_meta_1_xgb_linear.RData")
