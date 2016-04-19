@@ -29,3 +29,22 @@ Automation: Try to infer type of feature automatically with scripts and create f
 
 # Tuning xgb
 nrounds and eta is the last thing I tune. As your cpu has limitations, I would go for 3-fold CV (but would suggest 5-fold). I usually start with eta=0.05 (or even 0.1), tune optimal subsample/colsample_bytree simultaneously, then go for max_depth. and in the end reduce eta 0.025 or 0.01 and pick nrounds by CV (I have never used eta below 0.01 as it usually has no good cpu ROI :).
+
+# Feature importance
+- gini, auc, information value
+- lasso, tree
+
+# Ensemble
+- cor of submissions  
+- weighted averaging
+- rank averaging
+- stacking (oof predictions)
+- blending (predict on valid set, then stack on valid set)
+- second layer classifier (using only predictions, no other raw features)
+- time-based split of data and predict, then combine the output from different subsets
+
+# Todo
+- single model: KNN, ET, xgb(poisson), tsne, kmeans (level 0)
+- apply different subsets of rows and cols to train single model (level 0)
+- stacking with different models (level 1)
+- weighted averaging (level 2)
