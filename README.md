@@ -44,6 +44,8 @@ nrounds and eta is the last thing I tune. As your cpu has limitations, I would g
 - time-based split of data and predict, then combine the output from different subsets
 
 # Todo
+- interaction on top features
+- noise
 - single model: KNN, ET, xgb(poisson), tsne, kmeans (level 0)
 - apply different subsets of rows and cols to train single model (level 0)
 - stacking with different models (level 1)
