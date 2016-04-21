@@ -47,6 +47,7 @@ nrounds and eta is the last thing I tune. As your cpu has limitations, I would g
 - interaction on top features
 - oof target mean for categorical vars
 - noise
+- 30 features
 - single model: KNN, ET, xgb(poisson), tsne, kmeans (level 0)
 - apply different subsets of rows and cols to train single model (level 0)
 - stacking with different models (level 1)
