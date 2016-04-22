@@ -59,6 +59,7 @@ r <- as.data.table(apply(dt.pred.test[, !c("TARGET"), with = F], 2, rank))
 x <- as.data.table(apply(r, 2, range01))
 dt.pred.test <- cbind(x, TARGET = dt.pred.test$TARGET)
 
+save(dt.pred.train, dt.pred.test, file = "../data/Santander_Customer_Satisfaction/RData/dt_meta_1_all.RData")
 #######################################################################################
 ## blend ##############################################################################
 #######################################################################################
@@ -114,3 +115,4 @@ submit <- data.table(ID = dt.featureEngineered$ID[dt.featureEngineered$TARGET < 
                      , TARGET = as.numeric(pred.lasso.test))
 write.csv(submit, file = "submission/35_blend_with_glm.csv", row.names = F)
 # 0.838885
+# 0.839985 with et_fac and rf
