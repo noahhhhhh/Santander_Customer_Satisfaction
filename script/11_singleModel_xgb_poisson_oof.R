@@ -35,8 +35,8 @@ k = 5 # change to 5
 set.seed(888)
 folds <- createFolds(dt.train$TARGET, k = k, list = F)
 ## init preds
-vec.xgb.reg.pred.train <- rep(0, nrow(dt.train))
-vec.xgb.reg.pred.test <- rep(0, nrow(dt.test))
+vec.xgb.poisson.pred.train <- rep(0, nrow(dt.train))
+vec.xgb.poisson.pred.test <- rep(0, nrow(dt.test))
 ## init x.test
 x.test <- sparse.model.matrix(~., data = dt.test[, !c("ID", "TARGET"), with = F])
 ## init some params
@@ -51,8 +51,8 @@ score <- numeric()
 
 params <- list(booster = "gbtree"
                , nthread = 8
-               , objective = "reg:linear"
-               , eval_metric = "rmse"
+               , objective = "count:poisson"
+               , eval_metric = "auc"
                , max_depth = 5 # 5
                , subsample = ss #.74
                , min_child_weight = 1 # 1
@@ -79,21 +79,21 @@ for(i in 1:k){
     )
     # valid
     pred.valid <- predict(md.xgb, dmx.valid)
-    vec.xgb.reg.pred.train[f] <- pred.valid
+    vec.xgb.poisson.pred.train[f] <- pred.valid
     print(paste("fold:", i, "valid auc:", auc(dt.train$TARGET[f], pred.valid)))
     score[i] <- auc(dt.train$TARGET[f], pred.valid)
     
     # test
     pred.test <- predict(md.xgb, x.test)
-    vec.xgb.reg.pred.test <- vec.xgb.reg.pred.test + pred.test / k
+    vec.xgb.poisson.pred.test <- vec.xgb.poisson.pred.test + pred.test / k
 }
 
 mean(score)
 sd(score)
 
-auc(dt.train$TARGET, vec.xgb.reg.pred.train)
-# 0.83.. oof k = 5 
+auc(dt.train$TARGET, vec.xgb.poisson.pred.train)
+# 0.7767584 oof k = 5 
 #######################################################################################
 ## submit #############################################################################
 #######################################################################################
-save(vec.xgb.reg.pred.train, vec.xgb.reg.pred.test, file = "../data/Santander_Customer_Satisfaction/RData/dt_meta_1_xgb_reg.RData")
+save(vec.xgb.poisson.pred.train, vec.xgb.poisson.pred.test, file = "../data/Santander_Customer_Satisfaction/RData/dt_meta_1_xgb_poisson.RData")
