@@ -100,6 +100,7 @@ If you tune Gamma, you will tune how much you can take from these 1000 features 
 If you tune min_child_weight, you will tune what interactions you allow in a localized fashion. For instance, if the interaction between the 1000 "other features" and the features xgboost is trying to use is too low (at 0 momentum, the weight given to the interaction using time as weight), the interaction is discarded (pruned) everytime. :)
 That's over-simplified, but it is close to be like that. Remember also that "local" means "dependent on the previous nodes", so a node that should not exist may exist if the previous nodes are allowing it :)
 
+## Blending 
 Same as averaging, except you use power on each model.
 
 Example, for 4 submissions, you average them in a general case like:
