@@ -100,6 +100,26 @@ If you tune Gamma, you will tune how much you can take from these 1000 features 
 If you tune min_child_weight, you will tune what interactions you allow in a localized fashion. For instance, if the interaction between the 1000 "other features" and the features xgboost is trying to use is too low (at 0 momentum, the weight given to the interaction using time as weight), the interaction is discarded (pruned) everytime. :)
 That's over-simplified, but it is close to be like that. Remember also that "local" means "dependent on the previous nodes", so a node that should not exist may exist if the previous nodes are allowing it :)
 
+Same as averaging, except you use power on each model.
+
+Example, for 4 submissions, you average them in a general case like:
+
+Final Submission = (Submission1 + Submission2 + Submission3 + Submission4) / 4
+
+For a power averaging, you do the following:
+
+Final Submission = (Submission1^Power + Submission2^Power + Submission3^Power + Submission4^Power) / 4
+
+You use the properties of the power function (the further away you are from 1, the faster you are closer to 0). It means a model must be very confident on a positive label (here, target=1) to have its probability remaining the furthest away from the negative label (here, target=0).
+
+Visualization:
+
+enter image description here
+
+When dealing with power averaging, you must keep in mind you are looking at how close your models are from 0, and not how close they are from 1 (due to the power function properties). It also means that a bad model used for ensembling can jinx your whole ensemble very harshly, even if you have 10 strong models that are supposed to "average out the error". Visualizing the correlation between your models that will be used to ensemble is essential you understand the risk you are taking when ensembling using power average. The higher the decorrelation, the higher the risk of messing up things because of a bad input model => you are looking for high correlation straight from the beginning for the ensemble, not highly decorrelated/diverse models.
+
+The probabilities that remain the highest at the end are the probabilities whose relative agreement (weighted down by the probability and the power) coming from each ensembled model is the highest. The reverse is also true for those who are the lowest probabilities. This is the reason power averaging usually fares better, specifically for AUC (does NOT work RMSE, Log loss, etc.), and sometimes even better than a Rank SVM if you using stacking.
+
 =======
 
 # Feature importance
